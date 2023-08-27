@@ -1,4 +1,3 @@
-from typing import Any, List, Optional, Tuple
 from django.contrib import admin, messages
 from django.db.models.query import QuerySet
 from django.db.models.aggregates import Count
@@ -30,6 +29,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ["unit_price"]
     list_per_page = 10
     list_select_related = ["collection"]
+    search_fields = ["title"]
 
     def collection_title(self, product):
         return product.collection.title
@@ -71,13 +71,19 @@ class CustomerAdmin(admin.ModelAdmin):
         return super().get_queryset(request).annotate(orders_count=Count("order"))
 
 
+class OrderAdminInline(admin.TabularInline):
+    autocomplete_fields = ["product"]
+    min_num = 1
+    max_num = 10
+    model = models.OrderItem
+    extra = 0
+
+
 @admin.register(models.Order)
 class OrderAdmin(admin.ModelAdmin):
     autocomplete_fields = ["customer"]
-    list_display = ["id", "placed_at", "payment_status", "customer"]
-    list_editable = ["payment_status"]
-    ordering = ["placed_at"]
-    list_per_page = 10
+    inlines = [OrderAdminInline]
+    list_display = ["id", "placed_at", "customer"]
 
 
 @admin.register(models.Collection)
